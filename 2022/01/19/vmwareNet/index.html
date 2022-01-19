@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="eustrain" />
+
+
+
+<meta name="description" content="VMware虚拟机的网卡和代理服务器配置时常有人问我关于虚拟机连不上网的问题，到最后一般发现是VMware的网卡配置出现了问题。因此这里对VMware的网卡配置和如何在虚拟机中连接配置在宿主机上的代理服务器做一个较为系统的讲解，更适合对计算机网络有基本了解的读者，小白可以直接跳到配置网络照着NAT模式的配置做。 以多数情景使用windows作为宿主机，以及IPv4协议进行讲解，宿主机使用其他操作系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VMware虚拟机的网卡和代理服务器配置">
+<meta property="og:url" content="http://eustrainlee.github.io/2022/01/19/vmwareNet/index.html">
+<meta property="og:site_name" content="eustrain的小站">
+<meta property="og:description" content="VMware虚拟机的网卡和代理服务器配置时常有人问我关于虚拟机连不上网的问题，到最后一般发现是VMware的网卡配置出现了问题。因此这里对VMware的网卡配置和如何在虚拟机中连接配置在宿主机上的代理服务器做一个较为系统的讲解，更适合对计算机网络有基本了解的读者，小白可以直接跳到配置网络照着NAT模式的配置做。 以多数情景使用windows作为宿主机，以及IPv4协议进行讲解，宿主机使用其他操作系">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-8AB8E6E2-E16F-4E60-8421-669C96E6BF38-high.png">
+<meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-B8B0D851-3DF2-4999-AE86-9059AE017A9C-high.png">
+<meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-4C1FE8E1-9C52-4A43-9C36-97AEC38C737B-high.png">
+<meta property="og:image" content="http://eustrainlee.github.io/2022/01/19/vmwareNet/ip_config.png">
+<meta property="og:image" content="http://eustrainlee.github.io/2022/01/19/vmwareNet/gateway_config.png">
+<meta property="article:published_time" content="2022-01-19T03:38:56.000Z">
+<meta property="article:modified_time" content="2022-01-19T08:11:22.652Z">
+<meta property="article:author" content="eustrain">
+<meta property="article:tag" content="代理 proxy 网络 vmware">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-8AB8E6E2-E16F-4E60-8421-669C96E6BF38-high.png">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="eustrain的小站" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>VMware虚拟机的网卡和代理服务器配置 | eustrain的小站</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/"></a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" rel="noopener" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" rel="noopener" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" rel="noopener" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">eustrain</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页"></a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页"></a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-vmwareNet" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/01/19/vmwareNet/" class="article-date">
+      <time datetime="2022-01-19T03:38:56.000Z" itemprop="datePublished">2022-01-19</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      VMware虚拟机的网卡和代理服务器配置
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BB%A3%E7%90%86-proxy-%E7%BD%91%E7%BB%9C-vmware/" rel="tag">代理 proxy 网络 vmware</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h1 id="VMware虚拟机的网卡和代理服务器配置"><a href="#VMware虚拟机的网卡和代理服务器配置" class="headerlink" title="VMware虚拟机的网卡和代理服务器配置"></a>VMware虚拟机的网卡和代理服务器配置</h1><p>时常有人问我关于虚拟机连不上网的问题，到最后一般发现是VMware的网卡配置出现了问题。因此这里对VMware的网卡配置和如何在虚拟机中连接配置在宿主机上的代理服务器做一个较为系统的讲解，更适合对计算机网络有基本了解的读者，小白可以直接跳到<a href="#%E9%85%8D%E7%BD%AE%E7%BD%91%E7%BB%9C">配置网络</a>照着NAT模式的配置做。</p>
+<p>以多数情景使用windows作为宿主机，以及IPv4协议进行讲解，宿主机使用其他操作系统时原理相同，至于IPv6的网络配置本人还不太了解。</p>
+<blockquote>
+<p>注: 阅读这篇文章需要基础的计算机网络相关的知识</p>
+</blockquote>
+<h1 id="虚拟机是如何联网的"><a href="#虚拟机是如何联网的" class="headerlink" title="虚拟机是如何联网的"></a>虚拟机是如何联网的</h1><p>VMware共提供了3种模式用于虚拟机连接网络。VMware在宿主机中配置了两个虚拟网卡用于将宿主机上的网络共享到虚拟机中，对应其中两种连接模式，VMware Network Adapter VMnet1(仅主机模式)和VMware Network Adapter VMnet8(NAT模式)，桥接模式并没有使用虚拟网卡</p>
+<h2 id="桥接模式"><a href="#桥接模式" class="headerlink" title="桥接模式"></a>桥接模式</h2><p>在桥接模式下逻辑上VMware虚拟了一个交换机，宿主机和使用桥接模式的虚拟机都连接在这个桥接器上，这里可以简单的将交换机理解为一个集线器或桥接器。</p>
+<p>这使得虚拟机和宿主机被连接在同一个网段下。就如同本来你的电脑和你的家用路由器连接，然后又虚拟了一个设备也被连接在这个路由器上。</p>
+<p><img src="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-8AB8E6E2-E16F-4E60-8421-669C96E6BF38-high.png" alt="桥接模式"></p>
+<h2 id="仅主机模式"><a href="#仅主机模式" class="headerlink" title="仅主机模式"></a>仅主机模式</h2><p>在仅主机模式下逻辑上同桥接模式一样虚拟了一个交换机，但是这个交换机上仅有宿主机和连接到同一个虚拟网卡的虚拟机，于此同时还在这个交换机上还虚拟了一个DHCP服务器用于为宿主机和虚拟机分配IP地址。</p>
+<p>就如同你的电脑拥有两个网口，将其中一个网口连接到了一个路由器的LAN口上，然后将虚拟的设备也连接在了这个路由器的LAN口上</p>
+<p><img src="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-B8B0D851-3DF2-4999-AE86-9059AE017A9C-high.png" alt="仅主机模式"></p>
+<h2 id="NAT模式"><a href="#NAT模式" class="headerlink" title="NAT模式"></a>NAT模式</h2><p>在NAT模式下逻辑上依旧虚拟了一个交换机，而且这个交换机仅有宿主机和连接到同一个虚拟网卡的虚拟机，还在这个交换机上虚拟了一个DHCP服务器，只不过还在主机中虚拟了一个NAT设备，将从虚拟机发来的包经过网络地址转化发送到外部网络。</p>
+<p>可以理解为把你的电脑变成了个路由器，而且来自虚拟机的TCP/UDP连接将会占用一个宿主机的端口号</p>
+<p><img src="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-4C1FE8E1-9C52-4A43-9C36-97AEC38C737B-high.png" alt="NAT模式"></p>
+<blockquote>
+<p>注: 可以将图片中的NAT设备理解为宿主机及宿主机中的虚拟NAT设备</p>
+</blockquote>
+<h1 id="配置网络"><a href="#配置网络" class="headerlink" title="配置网络"></a>配置网络</h1><p>在虚拟机&gt;设置&gt;网络适配器中查看并修改(如果需要)具体虚拟机使用的是哪个网卡。</p>
+<p>桥接模式并不需要进行配置，像寻常的计算机一样使用即可，如果不需要配置代理，仅主机模式和NAT模式下一般也不需要配置。因此仅建议在虚拟机网络出现问题或者需要虚拟机连接到宿主机的代理工具时进行配置。</p>
+<p>在VMware中点击编辑&gt;虚拟网络编辑器，可以查看每个网卡对应的模式。</p>
+<p>在网络连接中找到相应的虚拟网卡。</p>
+<p>然后打开网卡的属性&gt;网络&gt;Internet协议版本4 (TCP/IPv4)。</p>
+<p>勾选使用下面的IP地址。</p>
+<p>自己定义一个子网，一般为192.168.AAA.0，其中192.168.AAA为前缀，BBB为主机地址。</p>
+<p>IP地址填一个该子网下的IP地址，注意主机地址不可以所有位全是1或全是0(例如：主机地址是192.168.1.0，子网掩码是255.255.255.0，那么IP地址不能是192.168.AAA.0或192.168.AAA.255)。</p>
+<p>子网掩码根据自己定义的局域网的前缀写，一般是255.255.255.0。</p>
+<p>默认网关这里可以不用填。</p>
+<p>然后点击确定，保存配置。</p>
+<p>我自己的配置，不需要和我一样<br><img src="/2022/01/19/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
+<p>回到VMware的编辑&gt;虚拟网络编辑器，点击更改设置以获取管理员权限。</p>
+<p>如果配置的网卡是NAT模式，那么选中要配置的网卡，然后点击NAT设置，修改网关(ip)为该子网下的一个IP，然后点击确定。注意网关IP不要和宿主机IP相同，其主机地址也不可以所有位全部是0或1。</p>
+<p>我自己的网关配置<br><img src="/2022/01/19/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
+<p>到此宿主机上的配置就全部完成了。</p>
+<p>虚拟机中一般选择DHCP自动获取IP地址就可以了，如果需要固定的IP地址，那么就自己填写IP地址(和网关，仅NAT模式填写，且和虚拟网络编辑器中的网关一致)，注意IP地址不能和宿主机IP地址(以及网关)相同。</p>
+<h1 id="虚拟机连接主机代理"><a href="#虚拟机连接主机代理" class="headerlink" title="虚拟机连接主机代理"></a>虚拟机连接主机代理</h1><p>在操作系统的设置或需自定义代理服务器的应用中将代理服务器填写为”宿主机IP:宿主机代理应用监听的端口”即可。注意代理应用需要允许来自局域网内的连接。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-cn/%E6%A9%8B%E6%8E%A5%E5%99%A8">https://zh.wikipedia.org/zh-cn/%E6%A9%8B%E6%8E%A5%E5%99%A8</a><br><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BD%91%E6%AE%B5">https://zh.wikipedia.org/wiki/%E7%BD%91%E6%AE%B5</a></p>
+<p><a target="_blank" rel="noopener" href="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/GUID-0CE1AE01-7E79-41BB-9EA8-4F839BE40E1A.html">https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/GUID-0CE1AE01-7E79-41BB-9EA8-4F839BE40E1A.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-cn/%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2">https://zh.wikipedia.org/zh-cn/%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2</a></p>
+<p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-cn/IP%E5%9C%B0%E5%9D%80">https://zh.wikipedia.org/zh-cn/IP%E5%9C%B0%E5%9D%80</a></p>
+<p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%97%A0%E7%B1%BB%E5%88%AB%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1">https://zh.wikipedia.org/wiki/%E6%97%A0%E7%B1%BB%E5%88%AB%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2022/01/19/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页"></a></p>
+        <p><span>发布时间:</span>2022-01-19, 11:38:56</p>
+        <p><span>最后更新:</span>2022-01-19, 16:11:22</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2022/01/19/vmwareNet/" title="VMware虚拟机的网卡和代理服务器配置">http://eustrainlee.github.io/2022/01/19/vmwareNet/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://eustrainlee.github.io/2022/01/19/vmwareNet/　　作者: " title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2022/01/16/test/">
+                    test
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#VMware%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E7%BD%91%E5%8D%A1%E5%92%8C%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">VMware虚拟机的网卡和代理服务器配置</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%98%AF%E5%A6%82%E4%BD%95%E8%81%94%E7%BD%91%E7%9A%84"><span class="toc-number">2.</span> <span class="toc-text">虚拟机是如何联网的</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A1%A5%E6%8E%A5%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.1.</span> <span class="toc-text">桥接模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%85%E4%B8%BB%E6%9C%BA%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.2.</span> <span class="toc-text">仅主机模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NAT%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.3.</span> <span class="toc-text">NAT模式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E7%BD%91%E7%BB%9C"><span class="toc-number">3.</span> <span class="toc-text">配置网络</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%BF%9E%E6%8E%A5%E4%B8%BB%E6%9C%BA%E4%BB%A3%E7%90%86"><span class="toc-number">4.</span> <span class="toc-text">虚拟机连接主机代理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-number">5.</span> <span class="toc-text">参考资料</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-4 i,
+        .toc-level-4 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"VMware虚拟机的网卡和代理服务器配置　| eustrain的小站　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2022/01/16/test/" title="下一篇: test">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/01/19/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/16/test/">test</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2022 eustrain
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
