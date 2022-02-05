@@ -219,10 +219,128 @@
 </nav>
       <div class="body-wrap">
   
-    <article id="post-whatIsRefenenceInCpp" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-blog/kubernetes/manifest_and_pod" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2022/01/30/whatIsRefenenceInCpp/" class="article-date">
+      <a href="/2022/02/05/blog/kubernetes/manifest_and_pod/" class="article-date">
+      <time datetime="2022-02-05T11:10:07.000Z" itemprop="datePublished">2022-02-05</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/02/05/blog/kubernetes/manifest_and_pod/">资源清单与Pod</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h1 id="资源清单"><a href="#资源清单" class="headerlink" title="资源清单"></a>资源清单</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>在k8s使用资源清单描述k8s中的对象，使用yaml或json来保存这些信息<br>资源清单中主要有四个必要的字段</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span></span><br><span class="line"><span class="attr">kind:</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">spec:</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="解释："><a href="#解释：" class="headerlink" title="解释："></a>解释：</h2><blockquote>
+<p>来自<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/concepts/overview/working-with-objects/kubernetes-objects/">https://kubernetes.io/zh/docs/concepts/overview/working-with-objects/kubernetes-objects/</a></p>
+</blockquote>
+<ul>
+<li>apiVersion: 创建该对象所使用的 Kubernetes API 的版本</li>
+<li>kind: 对象的类别</li>
+<li>metadata: 帮助唯一性标识对象的一些数据，包括一个 name 字符串、UID 和可选的namespace</li>
+<li>spec: 所期望的该对象的状态</li>
+</ul>
+<h1 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h1><h2 id="Pod是什么？"><a href="#Pod是什么？" class="headerlink" title="Pod是什么？"></a>Pod是什么？</h2><p>Pod 的共享上下文包括一组 Linux 名字空间、控制组（cgroup）和可能一些其他的隔离 方面，即用来隔离 Docker 容器的技术。 在 Pod 的上下文中，每个独立的应用可能会进一步实施隔离。<br>就 Docker 概念的术语而言，Pod 类似于共享名字空间和文件系统卷的一组 Docker 容器。<br>简单来说，可以认为Pod代表一个虚拟主机</p>
+<h2 id="构建pod"><a href="#构建pod" class="headerlink" title="构建pod"></a>构建pod</h2><p>对于pods</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">container_name</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">image_source:version</span></span><br><span class="line"><span class="comment">#    ports:</span></span><br><span class="line"><span class="comment">#    - containerPort: 80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="初始化容器"><a href="#初始化容器" class="headerlink" title="初始化容器"></a>初始化容器</h2><p>在spec下的数组字段initContainers的成员用于描述初始化容器，初始化容器在pod启动的时候会被按照顺序一次执行，要求钱一个容器正常退出（返回0）才可执行启动后一个容器，如果有任何一个初始化容器没有正常退出，即重新构建整个pod。</p>
+<p>初始化容器不应该无限期运行，但是可以一直等待下去，以实现容器间的同步。</p>
+<h2 id="Probe"><a href="#Probe" class="headerlink" title="Probe"></a>Probe</h2><p><strong>K8s</strong>提供了<strong>Probe</strong>（探针）用于辅助管理Pod中的容器</p>
+<p>共有3种探测方式</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#execaction-v1-core">ExecAction</a>： 在容器内执行指定命令。如果命令退出时返回码为 0 则认为诊断成功。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#tcpsocketaction-v1-core">TCPSocketAction</a>： 对容器的 IP 地址上的指定端口执行 TCP 检查。如果端口打开，则诊断被认为是成功的。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#httpgetaction-v1-core">HTTPGetAction</a>： 对容器的 IP 地址上指定端口和路径执行 HTTP Get 请求。如果响应的状态码大于等于 200 且小于 400，则诊断被认为是成功的。</p>
+</li>
+</ul>
+<p>每次探测都将获得以下三种结果之一：</p>
+<ul>
+<li><code>Success</code>（成功）：容器通过了诊断。</li>
+<li><code>Failure</code>（失败）：容器未通过诊断。</li>
+<li><code>Unknown</code>（未知）：诊断失败，因此不会采取任何行动。</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">demo_container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">demo:v1</span></span><br><span class="line">    <span class="attr">livenessProbe:</span></span><br><span class="line">      <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">      <span class="attr">timeoutSeconds:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">tcpSocket:</span></span><br><span class="line">        <span class="attr">port:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="readinessProbe"><a href="#readinessProbe" class="headerlink" title="readinessProbe"></a>readinessProbe</h3><p>就绪探针，在容器字段下的readinessProbe字段用于描述就绪探针。</p>
+<p>因为在容器成功启动后并不能保证容器立即可用，因此在容器启动一段时间后检测容器是否启动成功，如果失败那么等待一段时间后再次检测，以防容器一启动便将其用于提供服务。</p>
+<h3 id="livenessProbe"><a href="#livenessProbe" class="headerlink" title="livenessProbe"></a>livenessProbe</h3><p>容器下的<strong>livenessProbe</strong>成员用于描述存活探针。</p>
+<p>存活探针用于检测容器是否存活，如果探测失败会杀死容器。因为如果用于服务的进程已经结束运行但容器并没有结束运行，会导致不能其正常提供服务。</p>
+<h3 id="startupProbe"><a href="#startupProbe" class="headerlink" title="startupProbe"></a>startupProbe</h3><p>检测容器是否已经启动，该探针与其他所有探针互斥（会禁用所有其他探针）</p>
+<h2 id="事件处理函数"><a href="#事件处理函数" class="headerlink" title="事件处理函数"></a>事件处理函数</h2><p>事件处理函数（钩子），被配置在容器中，在容器中的进程启动前和结束前运行</p>
+<blockquote>
+<p>demo来自<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/">为容器的生命周期事件设置处理函数 | Kubernetes</a></p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">lifecycle-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">lifecycle-demo-container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">lifecycle:</span></span><br><span class="line">      <span class="attr">postStart:</span></span><br><span class="line">        <span class="attr">exec:</span></span><br><span class="line">          <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;echo Hello from the postStart handler &gt; /usr/share/message&quot;</span>]</span><br><span class="line">      <span class="attr">preStop:</span></span><br><span class="line">        <span class="attr">exec:</span></span><br><span class="line">          <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>,<span class="string">&quot;-c&quot;</span>,<span class="string">&quot;nginx -s quit; while killall -0 nginx; do sleep 1; done&quot;</span>]</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<h4 id="hook的类型"><a href="#hook的类型" class="headerlink" title="hook的类型"></a>hook的类型</h4><ul>
+<li><p>exec 执行命令</p>
+</li>
+<li><p>HTTP 发送HTTP报文</p>
+</li>
+</ul>
+<h4 id="postStart"><a href="#postStart" class="headerlink" title="postStart"></a>postStart</h4><p>Kubernetes 在容器创建后立即发送 postStart 事件。 然而，postStart 处理函数的调用不保证早于容器的入口点（entrypoint） 的执行。postStart 处理函数与容器的代码是异步执行的，但 Kubernetes 的容器管理逻辑会一直阻塞等待 postStart 处理函数执行完毕。 只有 postStart 处理函数执行完毕，容器的状态才会变成 RUNNING。</p>
+<h4 id="preStop"><a href="#preStop" class="headerlink" title="preStop"></a>preStop</h4><p>Kubernetes 在容器结束前立即发送 preStop 事件。除非 Pod 宽限期限超时，Kubernetes 的容器管理逻辑 会一直阻塞等待 preStop 处理函数执行完毕。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/" rel="tag">kubernetes</a></li></ul>
+    </div>
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
+    <article id="post-blog/whatIsRefenenceInCpp" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/01/30/blog/whatIsRefenenceInCpp/" class="article-date">
       <time datetime="2022-01-30T10:27:51.000Z" itemprop="datePublished">2022-01-30</time>
 </a>
 
@@ -238,7 +356,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2022/01/30/whatIsRefenenceInCpp/">在C++中引用是什么？</a>
+      <a class="article-title" href="/2022/01/30/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a>
     </h1>
   
 
@@ -249,7 +367,7 @@
       
           
         <h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><blockquote>
-<p>由于这篇文章并不是引用的教程，因此并不会对引用的语法及使用作很深的讲解。</p>
+<p>由于这篇文章并不是引用的教程，因此并不会对引用的语法及使用做很深的讲解。</p>
 </blockquote>
 <p>在C++中将一个对象赋值给一个引用，就是给它起别名。</p>
 <p>例如</p>
@@ -257,16 +375,16 @@
 
 <p>在这段代码中，a是一个int类型的对象，b是对象a的另一个名字。对b的任何操作和对a做同样操作没有任何区别。</p>
 <p>但是引用可以有更多的cv修饰符</p>
-<h1 id="C-为什么要引入引用"><a href="#C-为什么要引入引用" class="headerlink" title="C++为什么要引入引用"></a>C++为什么要引入引用</h1><p>在1984年，C++引入了运算符重载，使得我们可以自定义运算符的行为。不幸的是，这只是一个语法糖，例如一个二元运算符，我们有如下语句：</p>
+<h1 id="C-为什么要引入引用"><a href="#C-为什么要引入引用" class="headerlink" title="C++为什么要引入引用"></a>C++为什么要引入引用</h1><p>在1984年，C++引入了运算符重载，使得我们可以自定义运算符的行为。很不幸，这只是一个语法糖，例如一个二元运算符<strong>op</strong>，我们有如下语句：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C = A op B;</span><br></pre></td></tr></table></figure>
 
-<p>会被转换为</p>
+<p>根据A的类型，以及是否重载了operator <strong>op</strong>，它会被转换为</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C = A.<span class="keyword">operator</span> <span class="built_in">op</span>(B);</span><br></pre></td></tr></table></figure>
 
 <p>或者</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C = <span class="keyword">operator</span> <span class="built_in">op</span>(A, B);</span><br></pre></td></tr></table></figure>
 
-<p>更为糟糕的是，在C++中，参数是以拷贝的方式传递的，这样我们就不得不将B(或者A和B)拷贝一份，对于较大的对象有着较高的传递成本，以及参数传递过程中可能会出现对构造函数以及析构函数的调用，这大大降低了程序的运行效率，也使得程序的语义可能发生混乱，因此急需一种解决方案。</p>
+<p>更为糟糕的是，在C++中，参数是以拷贝的方式传递的，这样我们就不得不将B(或者A和B)拷贝一份，因此较大的对象会有着较高的拷贝成本，以及参数传递过程中可能会出现对构造函数以及析构函数的调用，这大大降低了程序的运行效率，也使得程序的语义发生混乱，因此这里需要一种解决方案。</p>
 <p>如果通过指针传递参数和返回值，那么我们确实可以避免对参数的调用，但会导致另一个问题：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 我们可能会写出这样的代码</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Vector_2</span> &#123;</span></span><br><span class="line">	<span class="keyword">double</span> x,y;</span><br><span class="line">&#125;;</span><br><span class="line">Vector_2 <span class="keyword">operator</span>+(Vector_2* lhs, Vector_2* rhs) &#123;</span><br><span class="line">	Vector_2 result;</span><br><span class="line">    result.x = lhs-&gt;x + rhs-&gt;x;</span><br><span class="line">	result.y = lhs-&gt;y + rhs-&gt;y;</span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -276,8 +394,8 @@
 <p>等价于</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">z = &amp;x + &amp;y;</span><br></pre></td></tr></table></figure>
 
-<p>但这与我们的直觉不相符，这看上去是将x的地址和y的地址相加，而不是将x的值与y的值相加。</p>
-<p>如果强行使</p>
+<p>但这与我们的直觉并不相符，这看上去是将x的地址和y的地址相加，而不是将x的值与y的值相加。</p>
+<p>如果使</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">z = x + y;</span><br></pre></td></tr></table></figure>
 
 <p>等价于</p>
@@ -289,9 +407,9 @@
 <p>这会被转换成</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="keyword">operator</span> +(&amp;b, &amp;<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
 
-<p>很可惜，我们无法取得字面量1的地址</p>
-<p>因此我们需要一种新的机制使函数可以使用传值的语法传递一个对象等，并且不对其执行拷贝操作。引用便作为指针的语法糖的存在出现了。</p>
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><p>对于类型T，T类型的引用是T&amp;。</p>
+<p>很可惜，我们无法取得字面量1的地址。</p>
+<p>我们需要一种新的机制使函数可以使用传值的语法传递一个对象等，并且不对其执行拷贝操作。引用便出现了。</p>
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><p>对于类型T，T的引用类型是T&amp;。</p>
 <h2 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h2><p>T可以是任意指针类型，也可以拥有任意个数的cv修饰符。</p>
 <p>T&amp;是区别与T的单独的类型。</p>
 <p>引用是最顶层的类型，没有引用的引用(T&amp; &amp;)，引用的指针(T &amp; *)，加在引用类型的cv修饰符会被忽略。</p>
@@ -318,8 +436,11 @@
 <p>但是下面的代码呢？</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test2</span><span class="params">(T&amp;&amp; t)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">callRef</span>(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>这会调用重载1，因为引用是一个左值，一个引用在进行函数重载时的行为和对应的非引用类型对象相同。</p>
-<h2 id="和指针的区别"><a href="#和指针的区别" class="headerlink" title="和指针的区别"></a>和指针的区别</h2><p>大多数情况下，引用的实现与指针相同，但是当不以同类型目标对象进行初始化且不作为形参时，引用类型的行为和对应类型T相同</p>
+<p>这会调用重载1，因为引用是一个左值，读写和修改一个引用的行为和对应的非引用类型对象相同。</p>
+<blockquote>
+<p>decltype一个引用名称会得到对应的引用类型。</p>
+</blockquote>
+<h2 id="和指针的区别"><a href="#和指针的区别" class="headerlink" title="和指针的区别"></a>和指针的区别</h2><p>大多数情况下，引用的实现与指针相同，但是当不以同类型目标对象进行初始化且不作为形参时，引用类型的行为和对应类型T相同（但语义不同）</p>
 <p>如果把指针比作软链接，那么引用就是对对象的硬链接。指针可以不指向一个对象，但引用一定指向一个对象（程序谬构除外）</p>
 
       
@@ -351,10 +472,10 @@
 
 
   
-    <article id="post-vmwareNet" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-blog/vmwareNet" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2022/01/19/vmwareNet/" class="article-date">
+      <a href="/2022/01/19/blog/vmwareNet/" class="article-date">
       <time datetime="2022-01-19T03:38:56.000Z" itemprop="datePublished">2022-01-19</time>
 </a>
 
@@ -370,7 +491,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2022/01/19/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a>
+      <a class="article-title" href="/2022/01/19/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a>
     </h1>
   
 
@@ -409,10 +530,10 @@
 <p>子网掩码根据自己定义的局域网的前缀写，一般是255.255.255.0。</p>
 <p>默认网关这里可以不用填。</p>
 <p>然后点击确定，保存配置。</p>
-<p>我自己的配置，不需要和我一样<br><img src="/2022/01/19/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
+<p>我自己的配置，不需要和我一样<br><img src="/2022/01/19/blog/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
 <p>回到VMware的编辑&gt;虚拟网络编辑器，点击更改设置以获取管理员权限。</p>
 <p>如果配置的网卡是NAT模式，那么选中要配置的网卡，然后点击NAT设置，修改网关(ip)为该子网下的一个IP，然后点击确定。注意网关IP不要和宿主机IP相同，其主机地址也不可以所有位全部是0或1。</p>
-<p>我自己的网关配置<br><img src="/2022/01/19/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
+<p>我自己的网关配置<br><img src="/2022/01/19/blog/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
 <p>到此宿主机上的配置就全部完成了。</p>
 <p>虚拟机中一般选择DHCP自动获取IP地址就可以了，如果需要固定的IP地址，那么就自己填写IP地址(和网关，仅NAT模式填写，且和虚拟网络编辑器中的网关一致)，注意IP地址不能和宿主机IP地址(以及网关)相同。</p>
 <h1 id="虚拟机连接主机代理"><a href="#虚拟机连接主机代理" class="headerlink" title="虚拟机连接主机代理"></a>虚拟机连接主机代理</h1><p>在操作系统的设置或需自定义代理服务器的应用中将代理服务器填写为”宿主机IP:宿主机代理应用监听的端口”即可。注意代理应用需要允许来自局域网内的连接。</p>
