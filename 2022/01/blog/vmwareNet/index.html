@@ -18,15 +18,15 @@
 <meta name="description" content="VMware虚拟机的网卡和代理服务器配置时常有人问我关于虚拟机连不上网的问题，到最后一般发现是VMware的网卡配置出现了问题。因此这里对VMware的网卡配置和如何在虚拟机中连接配置在宿主机上的代理服务器做一个较为系统的讲解，更适合对计算机网络有基本了解的读者，小白可以直接跳到配置网络照着NAT模式的配置做。 以多数情景使用windows作为宿主机，以及IPv4协议进行讲解，宿主机使用其他操作系">
 <meta property="og:type" content="article">
 <meta property="og:title" content="VMware虚拟机的网卡和代理服务器配置">
-<meta property="og:url" content="http://eustrainlee.github.io/2022/01/19/blog/vmwareNet/index.html">
+<meta property="og:url" content="http://eustrainlee.github.io/2022/01/blog/vmwareNet/index.html">
 <meta property="og:site_name" content="eustrain的小站">
 <meta property="og:description" content="VMware虚拟机的网卡和代理服务器配置时常有人问我关于虚拟机连不上网的问题，到最后一般发现是VMware的网卡配置出现了问题。因此这里对VMware的网卡配置和如何在虚拟机中连接配置在宿主机上的代理服务器做一个较为系统的讲解，更适合对计算机网络有基本了解的读者，小白可以直接跳到配置网络照着NAT模式的配置做。 以多数情景使用windows作为宿主机，以及IPv4协议进行讲解，宿主机使用其他操作系">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-8AB8E6E2-E16F-4E60-8421-669C96E6BF38-high.png">
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-B8B0D851-3DF2-4999-AE86-9059AE017A9C-high.png">
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-4C1FE8E1-9C52-4A43-9C36-97AEC38C737B-high.png">
-<meta property="og:image" content="http://eustrainlee.github.io/2022/01/19/blog/vmwareNet/ip_config.png">
-<meta property="og:image" content="http://eustrainlee.github.io/2022/01/19/blog/vmwareNet/gateway_config.png">
+<meta property="og:image" content="http://eustrainlee.github.io/2022/01/blog/vmwareNet/ip_config.png">
+<meta property="og:image" content="http://eustrainlee.github.io/2022/01/blog/vmwareNet/gateway_config.png">
 <meta property="article:published_time" content="2022-01-19T03:38:56.000Z">
 <meta property="article:modified_time" content="2022-01-19T08:11:22.652Z">
 <meta property="article:author" content="eustrain">
@@ -224,7 +224,7 @@
       <div class="body-wrap"><article id="post-blog/vmwareNet" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2022/01/19/blog/vmwareNet/" class="article-date">
+      <a href="/2022/01/blog/vmwareNet/" class="article-date">
       <time datetime="2022-01-19T03:38:56.000Z" itemprop="datePublished">2022-01-19</time>
 </a>
 
@@ -290,10 +290,10 @@
 <p>子网掩码根据自己定义的局域网的前缀写，一般是255.255.255.0。</p>
 <p>默认网关这里可以不用填。</p>
 <p>然后点击确定，保存配置。</p>
-<p>我自己的配置，不需要和我一样<br><img src="/2022/01/19/blog/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
+<p>我自己的配置，不需要和我一样<br><img src="/2022/01/blog/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
 <p>回到VMware的编辑&gt;虚拟网络编辑器，点击更改设置以获取管理员权限。</p>
 <p>如果配置的网卡是NAT模式，那么选中要配置的网卡，然后点击NAT设置，修改网关(ip)为该子网下的一个IP，然后点击确定。注意网关IP不要和宿主机IP相同，其主机地址也不可以所有位全部是0或1。</p>
-<p>我自己的网关配置<br><img src="/2022/01/19/blog/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
+<p>我自己的网关配置<br><img src="/2022/01/blog/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
 <p>到此宿主机上的配置就全部完成了。</p>
 <p>虚拟机中一般选择DHCP自动获取IP地址就可以了，如果需要固定的IP地址，那么就自己填写IP地址(和网关，仅NAT模式填写，且和虚拟网络编辑器中的网关一致)，注意IP地址不能和宿主机IP地址(以及网关)相同。</p>
 <h1 id="虚拟机连接主机代理"><a href="#虚拟机连接主机代理" class="headerlink" title="虚拟机连接主机代理"></a>虚拟机连接主机代理</h1><p>在操作系统的设置或需自定义代理服务器的应用中将代理服务器填写为”宿主机IP:宿主机代理应用监听的端口”即可。注意代理应用需要允许来自局域网内的连接。</p>
@@ -310,13 +310,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2022/01/19/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></p>
+        <p><span>本文标题:</span><a href="/2022/01/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页"></a></p>
         <p><span>发布时间:</span>2022-01-19, 11:38:56</p>
         <p><span>最后更新:</span>2022-01-19, 16:11:22</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2022/01/19/blog/vmwareNet/" title="VMware虚拟机的网卡和代理服务器配置">http://eustrainlee.github.io/2022/01/19/blog/vmwareNet/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://eustrainlee.github.io/2022/01/19/blog/vmwareNet/　　作者: " title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2022/01/blog/vmwareNet/" title="VMware虚拟机的网卡和代理服务器配置">http://eustrainlee.github.io/2022/01/blog/vmwareNet/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://eustrainlee.github.io/2022/01/blog/vmwareNet/　　作者: " title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -329,7 +329,7 @@
     <nav id="article-nav">
         
             <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2022/01/30/blog/whatIsRefenenceInCpp/">
+                <a href="/2022/01/blog/whatIsRefenenceInCpp/">
                     在C++中引用是什么？
                 </a>
             </div>
@@ -374,7 +374,7 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2022/01/30/blog/whatIsRefenenceInCpp/" title="上一篇: 在C++中引用是什么？">
+            <a href="/2022/01/blog/whatIsRefenenceInCpp/" title="上一篇: 在C++中引用是什么？">
                 <i class="fa fa-angle-left"></i>
             </a>
         
@@ -386,7 +386,7 @@
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/02/05/blog/kubernetes/manifest_and_pod/">资源清单与Pod</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/30/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/19/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/manifest_and_pod/">资源清单与Pod</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></li></ul>
 
 
 
