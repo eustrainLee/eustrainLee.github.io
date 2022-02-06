@@ -221,6 +221,112 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-blog/kubernetes/declarative_deployment" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/02/blog/kubernetes/declarative_deployment/" class="article-date">
+      <time datetime="2022-02-06T06:57:00.000Z" itemprop="datePublished">2022-02-06</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/02/blog/kubernetes/declarative_deployment/">声明式部署</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h1 id="为什么声明式部署"><a href="#为什么声明式部署" class="headerlink" title="为什么声明式部署"></a>为什么声明式部署</h1><p>声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。</p>
+<blockquote>
+<p>摘自Kubernetes设计模式 第三章</p>
+</blockquote>
+<p>在版本的升级或回滚过程中很可能需要编写大量重复的脚本，在这个过程中也极易出错。使用声明式部署可以自动化地做这些事情。</p>
+<h1 id="声明式部署做些什么"><a href="#声明式部署做些什么" class="headerlink" title="声明式部署做些什么"></a>声明式部署做些什么</h1><p>部署的核心是按照预期启动和停止一组<strong>Pod</strong>的能力。</p>
+<p>在部署开始时，会创建一个新的<strong>ReplicaSet</strong>用于存放更新后的Pod，然后执行更新策略，在旧的<strong>ReplicaSet</strong>中的所有<strong>Pod</strong>全部被移除，且新的<strong>ReplicaSet</strong>中的<strong>Pod</strong>全部启动成功后，Deployment将会指向新的<strong>ReplicaSet</strong>，并删除旧的<strong>ReplicaSet</strong>。</p>
+<p><strong>Kubernetes</strong>提供了两种更新方式重新创建和滚动更新。</p>
+<h1 id="声明式更新的触发方式"><a href="#声明式更新的触发方式" class="headerlink" title="声明式更新的触发方式"></a>声明式更新的触发方式</h1><p>以下3种方式可以触发声明式更新：</p>
+<ul>
+<li>kubectl replace命令，使用旧的部署替换掉新的部署</li>
+<li>打补丁(kubectl patch)或者交互式编辑（kubectl edit）,为容器设置新版本的新容器镜像</li>
+<li>使用kubectl set image，在部署中设置新镜像</li>
+</ul>
+<h1 id="重新创建"><a href="#重新创建" class="headerlink" title="重新创建"></a>重新创建</h1><p>此策略会删除所有现有的Pod，然后创建新的Pod</p>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">Recreate</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="格式"><a href="#格式" class="headerlink" title="格式"></a>格式</h2><ul>
+<li>type: 必须准确写为Recreate。</li>
+</ul>
+<h1 id="滚动更新"><a href="#滚动更新" class="headerlink" title="滚动更新"></a>滚动更新</h1><p>滚动更新（<strong>RollingUpdate</strong>）是<strong>Kubernetes</strong>的默认部署方式，它能够保证不会出现停机。</p>
+<blockquote>
+<p>不停机的实现需要就绪探针（<strong>readinessProbe</strong>），以用于确定容器真的可用。</p>
+</blockquote>
+<p>缺点: 在更新过程中，新旧版本会同时存在，可能会造成程序的不一致。</p>
+<h2 id="Demo-1"><a href="#Demo-1" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">    <span class="attr">roolingUpdate:</span></span><br><span class="line">      <span class="attr">maxSurge:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">maxUnavailable:</span> <span class="number">1</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h2><ul>
+<li><p>type: 必须准确写为RollingUpdate</p>
+</li>
+<li><p>roolingUpdate: 滚动更新的描述</p>
+<ul>
+<li><p>maxUnavailable: 最大不可用，一个非负整数或百分比（百分比会被向下取整到整数），用来指定更新过程中不可用的 <strong>Pod</strong> 的个数上限。如果这个值是0，那么<strong>maxSurge</strong>不能为0。这个值的默认值为25%。</p>
+</li>
+<li><p>maxSurge: 最大峰值，一个非负整数或百分比（百分比会被向上取整到整数），用来指定可以创建的超出期望<strong>Pod</strong>个数的 <strong>Pod</strong> 数量，如果<strong>MaxUnavailable</strong>为0，则此值不为0。这个值的默认值为25%。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h2><p>首先会删除旧的<strong>Pod</strong>，并启动新的<strong>Pod</strong>。当一个新的Pod可用时会删除下一个旧的<strong>Pod</strong>，当一个旧的Pod停止后会启动一个新的<strong>Pod</strong>，但在这过程中，会满足<strong>maxUnavaliable</strong>和<strong>maxSurge</strong>的要求。</p>
+<h1 id="蓝绿部署"><a href="#蓝绿部署" class="headerlink" title="蓝绿部署"></a>蓝绿部署</h1><p>蓝绿部署是一种发布策略，可以最大限度减少停机风险，缺点是在过程中会需要双倍的资源，且过程中新旧版本同时处于运行状态。</p>
+<p>使用蓝绿部署需要服务网格（Service Mesh）或者Knative等扩展，否则就需要自己写脚本。</p>
+<h2 id="策略-1"><a href="#策略-1" class="headerlink" title="策略"></a>策略</h2><p>首先创建新版本的<strong>Pod</strong>s，但不相应任何请求。在新版本的<strong>Pod</strong>s全部成功启动后，将流量从旧版本的<strong>Pod</strong>s迁移至新版本的<strong>Pod</strong>s，当流量完成迁移，即可将旧版本的<strong>Pod</strong>s删除</p>
+<h1 id="金丝雀发布"><a href="#金丝雀发布" class="headerlink" title="金丝雀发布"></a>金丝雀发布</h1><p>金丝雀发布是一种平滑的发布策略。使用新的实例替换掉一小部分新的实例，这种技术只让一小部分消费者使用更新后的版本，以降低迁移风险。</p>
+<h2 id="策略-2"><a href="#策略-2" class="headerlink" title="策略"></a>策略</h2><p>为新版本的容器（<strong>Pod</strong>）创建一个副本集，且只包含少量副本，并将一些消费者定向到新的Pod的实例上，如果确信新版本能够符合预期地工作便可对副本集进行拓展，并减少旧的副本集直至0。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/" rel="tag">kubernetes</a></li></ul>
+    </div>
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-blog/kubernetes/Workload" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -253,8 +359,7 @@
         <h1 id="工作负载"><a href="#工作负载" class="headerlink" title="工作负载"></a>工作负载</h1><p>同<strong>Pod</strong>一样，工作负载也是<strong>kubernetes</strong>中的一种资源，同样使用资源清单进行描述。</p>
 <p>使用工作负载可以批量管理<strong>Pod</strong></p>
 <h1 id="ReplicaSet"><a href="#ReplicaSet" class="headerlink" title="ReplicaSet"></a>ReplicaSet</h1><p><strong>ReplicaSet</strong>维护一组在任何时候都处于运行状态的 Pod 副本的稳定集合。 因此，它通常用来保证给定数量的、完全相同的 Pod 的可用性。</p>
-<p>Demo:</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicaSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">guestbook</span></span><br><span class="line">    <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment"># modify replicas according to your case</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">matchExpressions:</span></span><br><span class="line">      <span class="bullet">-</span> &#123;<span class="attr">key:</span> <span class="string">tier</span>, <span class="attr">operator:</span> <span class="string">In</span>, <span class="attr">values:</span> [<span class="string">cache</span>]&#125;</span><br><span class="line">      <span class="bullet">-</span> &#123;<span class="attr">key:</span> <span class="string">environment</span>, <span class="attr">operator:</span> <span class="string">NotIn</span>, <span class="attr">values:</span> [<span class="string">dev</span>]&#125;</span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">php-redis</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">gcr.io/google_samples/gb-frontend:v3</span></span><br></pre></td></tr></table></figure>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicaSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">guestbook</span></span><br><span class="line">    <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment"># modify replicas according to your case</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">matchExpressions:</span></span><br><span class="line">      <span class="bullet">-</span> &#123;<span class="attr">key:</span> <span class="string">tier</span>, <span class="attr">operator:</span> <span class="string">In</span>, <span class="attr">values:</span> [<span class="string">cache</span>]&#125;</span><br><span class="line">      <span class="bullet">-</span> &#123;<span class="attr">key:</span> <span class="string">environment</span>, <span class="attr">operator:</span> <span class="string">NotIn</span>, <span class="attr">values:</span> [<span class="string">dev</span>]&#125;</span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">tier:</span> <span class="string">frontend</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">php-redis</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">gcr.io/google_samples/gb-frontend:v3</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="格式"><a href="#格式" class="headerlink" title="格式"></a>格式</h2><ul>
 <li><p>kind: 必须写为ReplicaSet</p>
@@ -294,9 +399,40 @@
 </li>
 </ul>
 <h2 id="匹配方式"><a href="#匹配方式" class="headerlink" title="匹配方式"></a>匹配方式</h2><p>spec&gt;selector&gt;matchLabels是<strong>Pod</strong>的labels的子集</p>
-<h1 id="ReplicationController"><a href="#ReplicationController" class="headerlink" title="ReplicationController"></a>ReplicationController</h1><p>与RS基本相同，但不支持<strong>matchExpressions</strong>，这里不多介绍，当需要使用RC的时候使用RS即可。</p>
+<h1 id="ReplicationController"><a href="#ReplicationController" class="headerlink" title="ReplicationController"></a>ReplicationController</h1><p>与<strong>ReplicaSet</strong>基本相同，但不支持<strong>matchExpressions</strong>，这里不多介绍，可以把<strong>ReplicaSet</strong>看作<strong>ReplicationController</strong>的升级版，当需要使用<strong>ReplicationController</strong>的时候使用<strong>ReplicaSet</strong>即可。</p>
 <p>RC的<strong>kind</strong>字段要准确写为<strong>ReplicationController</strong></p>
-<h1 id="Deployments"><a href="#Deployments" class="headerlink" title="Deployments"></a>Deployments</h1><p><strong>Deployments</strong>为<strong>Pod</strong>s和<strong>ReplicaSet</strong>s提供声明式更新能力。</p>
+<h1 id="Deployment"><a href="#Deployment" class="headerlink" title="Deployment"></a>Deployment</h1><p><strong>Deployment</strong>为<strong>Pod</strong>s和<strong>ReplicaSet</strong>s提供声明式更新能力。</p>
+<blockquote>
+<p>虽然可用于命令式更新，但这样使用<strong>Deployment</strong>就没什么意义了</p>
+</blockquote>
+<p><strong>Deployment</strong>可以看作<strong>ReplicaSet</strong>的升级版</p>
+<h2 id="Demo-1"><a href="#Demo-1" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-deployment</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">nginx:1.14.2</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h2><ul>
+<li><p>apiVersion: 使用的api版本</p>
+</li>
+<li><p>kind: 必须准确写为Deployment</p>
+</li>
+<li><p>metadata: 元数据</p>
+<ul>
+<li><p>name: <strong>Deployment</strong>的名称</p>
+</li>
+<li><p>labels: <strong>Deployment</strong>具有的标签</p>
+</li>
+</ul>
+</li>
+<li><p>spec: 描述，只有.spec.template 和 .spec.selector 是必需的字段。</p>
+<ul>
+<li><p>template: 一个pod模板，见<strong>ReplicaSet</strong></p>
+</li>
+<li><p>selector: 选择算符，同见<strong>ReplicaSet</strong></p>
+</li>
+<li><p>replicas: 副本数量，默认是1</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="部署策略"><a href="#部署策略" class="headerlink" title="部署策略"></a>部署策略</h2><p>见<a href="/2022/02/blog/kubernetes/declarative_deployment/">后面文章</a></p>
 
       
     </div>

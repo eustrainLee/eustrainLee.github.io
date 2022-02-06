@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="eustrain" />
+
+
+
+<meta name="description" content="为什么声明式部署声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。  摘自Kubernetes设计模式 第三章  在版本的升级或回滚过程中很可能需要编写大量重复的脚本，在这个过程中也极易出错。使用声明式部署可以自动化地做这些事情。 声明式部署做些什么部署的核心是按照预期启动和停止一组Pod的能力。 在部署开始时，会创建一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="声明式部署">
+<meta property="og:url" content="http://eustrainlee.github.io/2022/02/blog/kubernetes/declarative_deployment/index.html">
+<meta property="og:site_name" content="eustrain的小站">
+<meta property="og:description" content="为什么声明式部署声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。  摘自Kubernetes设计模式 第三章  在版本的升级或回滚过程中很可能需要编写大量重复的脚本，在这个过程中也极易出错。使用声明式部署可以自动化地做这些事情。 声明式部署做些什么部署的核心是按照预期启动和停止一组Pod的能力。 在部署开始时，会创建一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-02-06T06:57:00.000Z">
+<meta property="article:modified_time" content="2022-02-06T08:00:25.904Z">
+<meta property="article:author" content="eustrain">
+<meta property="article:tag" content="kubernetes">
+<meta name="twitter:card" content="summary">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="eustrain的小站" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>声明式部署 | eustrain的小站</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/"></a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" rel="noopener" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" rel="noopener" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" rel="noopener" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">eustrain</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页"></a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页"></a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-blog/kubernetes/declarative_deployment" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/02/blog/kubernetes/declarative_deployment/" class="article-date">
+      <time datetime="2022-02-06T06:57:00.000Z" itemprop="datePublished">2022-02-06</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      声明式部署
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/" rel="tag">kubernetes</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h1 id="为什么声明式部署"><a href="#为什么声明式部署" class="headerlink" title="为什么声明式部署"></a>为什么声明式部署</h1><p>声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。</p>
+<blockquote>
+<p>摘自Kubernetes设计模式 第三章</p>
+</blockquote>
+<p>在版本的升级或回滚过程中很可能需要编写大量重复的脚本，在这个过程中也极易出错。使用声明式部署可以自动化地做这些事情。</p>
+<h1 id="声明式部署做些什么"><a href="#声明式部署做些什么" class="headerlink" title="声明式部署做些什么"></a>声明式部署做些什么</h1><p>部署的核心是按照预期启动和停止一组<strong>Pod</strong>的能力。</p>
+<p>在部署开始时，会创建一个新的<strong>ReplicaSet</strong>用于存放更新后的Pod，然后执行更新策略，在旧的<strong>ReplicaSet</strong>中的所有<strong>Pod</strong>全部被移除，且新的<strong>ReplicaSet</strong>中的<strong>Pod</strong>全部启动成功后，Deployment将会指向新的<strong>ReplicaSet</strong>，并删除旧的<strong>ReplicaSet</strong>。</p>
+<p><strong>Kubernetes</strong>提供了两种更新方式重新创建和滚动更新。</p>
+<h1 id="声明式更新的触发方式"><a href="#声明式更新的触发方式" class="headerlink" title="声明式更新的触发方式"></a>声明式更新的触发方式</h1><p>以下3种方式可以触发声明式更新：</p>
+<ul>
+<li>kubectl replace命令，使用旧的部署替换掉新的部署</li>
+<li>打补丁(kubectl patch)或者交互式编辑（kubectl edit）,为容器设置新版本的新容器镜像</li>
+<li>使用kubectl set image，在部署中设置新镜像</li>
+</ul>
+<h1 id="重新创建"><a href="#重新创建" class="headerlink" title="重新创建"></a>重新创建</h1><p>此策略会删除所有现有的Pod，然后创建新的Pod</p>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">Recreate</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="格式"><a href="#格式" class="headerlink" title="格式"></a>格式</h2><ul>
+<li>type: 必须准确写为Recreate。</li>
+</ul>
+<h1 id="滚动更新"><a href="#滚动更新" class="headerlink" title="滚动更新"></a>滚动更新</h1><p>滚动更新（<strong>RollingUpdate</strong>）是<strong>Kubernetes</strong>的默认部署方式，它能够保证不会出现停机。</p>
+<blockquote>
+<p>不停机的实现需要就绪探针（<strong>readinessProbe</strong>），以用于确定容器真的可用。</p>
+</blockquote>
+<p>缺点: 在更新过程中，新旧版本会同时存在，可能会造成程序的不一致。</p>
+<h2 id="Demo-1"><a href="#Demo-1" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">    <span class="attr">roolingUpdate:</span></span><br><span class="line">      <span class="attr">maxSurge:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">maxUnavailable:</span> <span class="number">1</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h2><ul>
+<li><p>type: 必须准确写为RollingUpdate</p>
+</li>
+<li><p>roolingUpdate: 滚动更新的描述</p>
+<ul>
+<li><p>maxUnavailable: 最大不可用，一个非负整数或百分比（百分比会被向下取整到整数），用来指定更新过程中不可用的 <strong>Pod</strong> 的个数上限。如果这个值是0，那么<strong>maxSurge</strong>不能为0。这个值的默认值为25%。</p>
+</li>
+<li><p>maxSurge: 最大峰值，一个非负整数或百分比（百分比会被向上取整到整数），用来指定可以创建的超出期望<strong>Pod</strong>个数的 <strong>Pod</strong> 数量，如果<strong>MaxUnavailable</strong>为0，则此值不为0。这个值的默认值为25%。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h2><p>首先会删除旧的<strong>Pod</strong>，并启动新的<strong>Pod</strong>。当一个新的Pod可用时会删除下一个旧的<strong>Pod</strong>，当一个旧的Pod停止后会启动一个新的<strong>Pod</strong>，但在这过程中，会满足<strong>maxUnavaliable</strong>和<strong>maxSurge</strong>的要求。</p>
+<h1 id="蓝绿部署"><a href="#蓝绿部署" class="headerlink" title="蓝绿部署"></a>蓝绿部署</h1><p>蓝绿部署是一种发布策略，可以最大限度减少停机风险，缺点是在过程中会需要双倍的资源，且过程中新旧版本同时处于运行状态。</p>
+<p>使用蓝绿部署需要服务网格（Service Mesh）或者Knative等扩展，否则就需要自己写脚本。</p>
+<h2 id="策略-1"><a href="#策略-1" class="headerlink" title="策略"></a>策略</h2><p>首先创建新版本的<strong>Pod</strong>s，但不相应任何请求。在新版本的<strong>Pod</strong>s全部成功启动后，将流量从旧版本的<strong>Pod</strong>s迁移至新版本的<strong>Pod</strong>s，当流量完成迁移，即可将旧版本的<strong>Pod</strong>s删除</p>
+<h1 id="金丝雀发布"><a href="#金丝雀发布" class="headerlink" title="金丝雀发布"></a>金丝雀发布</h1><p>金丝雀发布是一种平滑的发布策略。使用新的实例替换掉一小部分新的实例，这种技术只让一小部分消费者使用更新后的版本，以降低迁移风险。</p>
+<h2 id="策略-2"><a href="#策略-2" class="headerlink" title="策略"></a>策略</h2><p>为新版本的容器（<strong>Pod</strong>）创建一个副本集，且只包含少量副本，并将一些消费者定向到新的Pod的实例上，如果确信新版本能够符合预期地工作便可对副本集进行拓展，并减少旧的副本集直至0。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2022/02/blog/kubernetes/declarative_deployment/">声明式部署</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页"></a></p>
+        <p><span>发布时间:</span>2022-02-06, 14:57:00</p>
+        <p><span>最后更新:</span>2022-02-06, 16:00:25</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2022/02/blog/kubernetes/declarative_deployment/" title="声明式部署">http://eustrainlee.github.io/2022/02/blog/kubernetes/declarative_deployment/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://eustrainlee.github.io/2022/02/blog/kubernetes/declarative_deployment/　　作者: " title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2022/02/blog/kubernetes/Workload/">
+                    工作负载
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A3%B0%E6%98%8E%E5%BC%8F%E9%83%A8%E7%BD%B2"><span class="toc-number">1.</span> <span class="toc-text">为什么声明式部署</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E%E5%BC%8F%E9%83%A8%E7%BD%B2%E5%81%9A%E4%BA%9B%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">声明式部署做些什么</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E%E5%BC%8F%E6%9B%B4%E6%96%B0%E7%9A%84%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F"><span class="toc-number">3.</span> <span class="toc-text">声明式更新的触发方式</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%87%8D%E6%96%B0%E5%88%9B%E5%BB%BA"><span class="toc-number">4.</span> <span class="toc-text">重新创建</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo"><span class="toc-number">4.1.</span> <span class="toc-text">Demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%BC%E5%BC%8F"><span class="toc-number">4.2.</span> <span class="toc-text">格式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%BB%9A%E5%8A%A8%E6%9B%B4%E6%96%B0"><span class="toc-number">5.</span> <span class="toc-text">滚动更新</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo-1"><span class="toc-number">5.1.</span> <span class="toc-text">Demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%BC%E5%BC%8F-1"><span class="toc-number">5.2.</span> <span class="toc-text">格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AD%96%E7%95%A5"><span class="toc-number">5.3.</span> <span class="toc-text">策略</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%93%9D%E7%BB%BF%E9%83%A8%E7%BD%B2"><span class="toc-number">6.</span> <span class="toc-text">蓝绿部署</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AD%96%E7%95%A5-1"><span class="toc-number">6.1.</span> <span class="toc-text">策略</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%87%91%E4%B8%9D%E9%9B%80%E5%8F%91%E5%B8%83"><span class="toc-number">7.</span> <span class="toc-text">金丝雀发布</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AD%96%E7%95%A5-2"><span class="toc-number">7.1.</span> <span class="toc-text">策略</span></a></li></ol></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-4 i,
+        .toc-level-4 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2022/02/blog/kubernetes/Workload/" title="下一篇: 工作负载">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/declarative_deployment/">声明式部署</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/Workload/">工作负载</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/manifest_and_pod/">资源清单与Pod</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2022 eustrain
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
