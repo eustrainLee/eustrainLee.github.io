@@ -221,6 +221,157 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-blog/kubernetes/other_workload" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/02/blog/kubernetes/other_workload/" class="article-date">
+      <time datetime="2022-02-07T03:09:06.000Z" itemprop="datePublished">2022-02-07</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/02/blog/kubernetes/other_workload/">其他工作负载</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>仅仅有RS或者Deployment往往是不够的，因此Kubernetes提供了一些其他的工作负载。</p>
+<h1 id="DaemonSet"><a href="#DaemonSet" class="headerlink" title="DaemonSet"></a>DaemonSet</h1><p>在应用级别，常常使用守护进程为应用程序提供一些特殊服务。<strong>Kubernetes</strong>中，提供了<strong>DaemonSet</strong>用以提供<strong>Pod</strong>级别的服务。</p>
+<p><strong>DaemonSet</strong>可以保证在每个节点都拥有一个<strong>Pod</strong>的副本，当有新节点加入集群时，会自动为它们创建<strong>Pod</strong>副本，当节点从集群移出时，<strong>Pod</strong>也会被回收。</p>
+<p>DaemonSet 的一些典型用法：</p>
+<ul>
+<li>在每个节点上运行集群守护进程</li>
+<li>在每个节点上运行日志收集守护进程</li>
+<li>在每个节点上运行监控守护进程</li>
+</ul>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><blockquote>
+<p> 来自<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/concepts/workloads/controllers/daemonset/">https://kubernetes.io/zh/docs/concepts/workloads/controllers/daemonset/</a></p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">k8s-app:</span> <span class="string">fluentd-logging</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">tolerations:</span></span><br><span class="line">      <span class="comment"># this toleration is to have the daemonset runnable on master nodes</span></span><br><span class="line">      <span class="comment"># remove it if your masters can&#x27;t run pods</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">node-role.kubernetes.io/master</span></span><br><span class="line">        <span class="attr">operator:</span> <span class="string">Exists</span></span><br><span class="line">        <span class="attr">effect:</span> <span class="string">NoSchedule</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">fluentd-elasticsearch</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">quay.io/fluentd_elasticsearch/fluentd:v2.5.2</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">200Mi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">100m</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">200Mi</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlog</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/var/log</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlibdockercontainers</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/var/lib/docker/containers</span></span><br><span class="line">          <span class="attr">readOnly:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlog</span></span><br><span class="line">        <span class="attr">hostPath:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">/var/log</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">varlibdockercontainers</span></span><br><span class="line">        <span class="attr">hostPath:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">/var/lib/docker/containers</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="格式"><a href="#格式" class="headerlink" title="格式"></a>格式</h2><ul>
+<li>apiVersion: 创建该对象所使用的 Kubernetes API 的版本</li>
+<li>kind: 必须准确写为DaemonSet</li>
+<li>metadata: DadmonSet对象的元数据</li>
+<li>spec: 配置信息<ul>
+<li>template: spec下的必须字段，对Pod模板进行描述，见<strong>ReplicaSet</strong>或<strong>Deployment</strong>的.spec.template字段<ul>
+<li>restartPolicy: 容器重启策略，这个字段一定存在，且值为Always，这个值未指定时，它是默认值Always</li>
+</ul>
+</li>
+<li>selector: 匹配算符必须合理</li>
+</ul>
+</li>
+</ul>
+<h1 id="Job"><a href="#Job" class="headerlink" title="Job"></a>Job</h1><p>负责创建仅执行一次的<strong>Pod</strong>s(这些<strong>Pod</strong>s应该会在一定时间内退出)，保证一个或多个<strong>Pod</strong>s成功结束(返回0)。</p>
+<h2 id="Demo-1"><a href="#Demo-1" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Job</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pi</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">pi</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">perl</span></span><br><span class="line">        <span class="attr">command:</span> [<span class="string">&quot;perl&quot;</span>,  <span class="string">&quot;-Mbignum=bpi&quot;</span>, <span class="string">&quot;-wle&quot;</span>, <span class="string">&quot;print bpi(2000)&quot;</span>]</span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Never</span></span><br><span class="line">  <span class="attr">backoffLimit:</span> <span class="number">4</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h2><ul>
+<li>apiVersion: 创建该对象所使用的 Kubernetes API 的版本</li>
+<li>kind: 必须准确写为Job。</li>
+<li>spec: 描述信息。<ul>
+<li>template: 唯一的必须字段。<ul>
+<li>RestartPolicy: 重启策略，只能设置为Never或OnFailure之一。</li>
+</ul>
+</li>
+<li>parallelism: 一个非负整数，表示并行数量，默认值为1，如果这个值为0，那么在<strong>Job</strong>启动后便会被暂停，直至这个数增加。</li>
+<li>completions: 正整数，用于指定应该成功完成的pod的数量，如果设置为nil，表示着任何<strong>pod</strong>的完成都意味着所有<strong>pod</strong>的成功，并允许并行度为任意正值。这个值默认为1，如果设置为1，那么并行度<strong>parallelism</strong>也会限制为1，且该<strong>pod</strong>的成功意味着<strong>Job</strong>的成功。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Job-的并行执行"><a href="#Job-的并行执行" class="headerlink" title="Job 的并行执行"></a>Job 的并行执行</h2><p>适合以 Job 形式来运行的任务主要有三种：</p>
+<ol>
+<li>非并行 Job：<ul>
+<li>通常只启动一个 Pod，除非该 Pod 失败。</li>
+<li>当 Pod 成功终止时，立即视 Job 为完成状态。</li>
+</ul>
+</li>
+<li>具有确定完成计数的并行 Job：<ul>
+<li><code>.spec.completions</code> 字段设置为非 0 的正数值。</li>
+<li>Job 用来代表整个任务，当成功的 Pod 个数达到 <code>.spec.completions</code> 时，Job 被视为完成。</li>
+<li>当使用 <code>.spec.completionMode=&quot;Indexed&quot;</code> 时，每个 Pod 都会获得一个不同的 索引值，介于 0 和 <code>.spec.completions-1</code> 之间。</li>
+</ul>
+</li>
+<li>带工作队列的并行 Job：<ul>
+<li>不设置 <code>spec.completions</code>，默认值为 <code>.spec.parallelism</code>。</li>
+<li>多个 Pod 之间必须相互协调，或者借助外部服务确定每个 Pod 要处理哪个工作条目。 例如，任一 Pod 都可以从工作队列中取走最多 N 个工作条目。</li>
+<li>每个 Pod 都可以独立确定是否其它 Pod 都已完成，进而确定 Job 是否完成。</li>
+<li>当 Job 中 <em>任何</em> Pod 成功终止，不再创建新 Pod。</li>
+<li>一旦至少 1 个 Pod 成功完成，并且所有 Pod 都已终止，即可宣告 Job 成功完成。</li>
+<li>一旦任何 Pod 成功退出，任何其它 Pod 都不应再对此任务执行任何操作或生成任何输出。 所有 Pod 都应启动退出过程。</li>
+</ul>
+</li>
+</ol>
+<h1 id="CronJob"><a href="#CronJob" class="headerlink" title="CronJob"></a>CronJob</h1><p>CronJob 用于执行周期性的动作，例如备份、报告生成等。</p>
+<h2 id="Demo-2"><a href="#Demo-2" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronJob</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">schedule:</span> <span class="string">&quot;*/1 * * * *&quot;</span></span><br><span class="line">  <span class="attr">jobTemplate:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">template:</span></span><br><span class="line">        <span class="attr">spec:</span></span><br><span class="line">          <span class="attr">containers:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line">            <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">            <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">            <span class="attr">command:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">date;</span> <span class="string">echo</span> <span class="string">Hello</span> <span class="string">from</span> <span class="string">the</span> <span class="string">Kubernetes</span> <span class="string">cluster</span></span><br><span class="line">          <span class="attr">restartPolicy:</span> <span class="string">OnFailure</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="格式-2"><a href="#格式-2" class="headerlink" title="格式"></a>格式</h2><ul>
+<li>apiVersion: 创建该对象所使用的 Kubernetes API 的版本。</li>
+<li>kind: 必须准确写为CronJob。</li>
+<li>metadata: 元数据。</li>
+<li>spec: 描述信息。<ul>
+<li>schedule: 什么时候被调度，时间表语法详见<a target="_blank" rel="noopener" href="https://crontab.guru/">cronitor</a>。</li>
+<li>jobTemplate: 被调度的Job的模板，但是没有apiVersion和kind，这里不再叙述。</li>
+<li>concurrencyPolicy: 并发性规则，值必须是以下几个之一: “Allow”（默认值）表示允许并发，”Forbid”表示禁止并发，”Replace”表示取消当前<strong>Job</strong>并移除它，然后用一个新的<strong>Job</strong>替换掉它。</li>
+<li>suspend: 挂起，如果为true，会告诉从controller暂停后续执行，但不会应用到已经开始的执行，主要用于暂停对<strong>CronJob</strong>的使用，这个值默认为假。</li>
+<li>startingDeadlineSeconds: 以秒为单位的截止时间，超时的执行会被认为<strong>Job</strong>失败。</li>
+</ul>
+</li>
+</ul>
+<h1 id="StatefulSets"><a href="#StatefulSets" class="headerlink" title="StatefulSets"></a>StatefulSets</h1><p>StatefulSet 是用来管理有状态应用的工作负载 API 对象。</p>
+<blockquote>
+<p>TODO: 完成这一章节</p>
+</blockquote>
+<h2 id="Demo-3"><a href="#Demo-3" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">  <span class="attr">clusterIP:</span> <span class="string">None</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span> <span class="comment"># has to match .spec.template.metadata.labels</span></span><br><span class="line">  <span class="attr">serviceName:</span> <span class="string">&quot;nginx&quot;</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span> <span class="comment"># by default is 1</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span> <span class="comment"># has to match .spec.selector.matchLabels</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">10</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">k8s.gcr.io/nginx-slim:0.8</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">        <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">www</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/usr/share/nginx/html</span></span><br><span class="line">  <span class="attr">volumeClaimTemplates:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">www</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">accessModes:</span> [ <span class="string">&quot;ReadWriteOnce&quot;</span> ]</span><br><span class="line">      <span class="attr">storageClassName:</span> <span class="string">&quot;my-storage-class&quot;</span></span><br><span class="line">      <span class="attr">resources:</span></span><br><span class="line">        <span class="attr">requests:</span></span><br><span class="line">          <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/" rel="tag">kubernetes</a></li></ul>
+    </div>
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-blog/kubernetes/declarative_deployment" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -250,7 +401,7 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h1 id="为什么声明式部署"><a href="#为什么声明式部署" class="headerlink" title="为什么声明式部署"></a>为什么声明式部署</h1><p>声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。</p>
+        <h1 id="为什么声明式部署（更新）"><a href="#为什么声明式部署（更新）" class="headerlink" title="为什么声明式部署（更新）"></a>为什么声明式部署（更新）</h1><p>声明式部署模式的核心是Kubernetes的部署资源，这个抽象封装了一组容器的升级和回滚过程，且在过程的执行可以重复和自动化。</p>
 <blockquote>
 <p>摘自Kubernetes设计模式 第三章</p>
 </blockquote>
@@ -405,7 +556,7 @@
 <blockquote>
 <p>虽然可用于命令式更新，但这样使用<strong>Deployment</strong>就没什么意义了</p>
 </blockquote>
-<p><strong>Deployment</strong>可以看作<strong>ReplicaSet</strong>的升级版</p>
+<p><strong>Deployment</strong>可以看作<strong>ReplicaSet</strong>的封装</p>
 <h2 id="Demo-1"><a href="#Demo-1" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-deployment</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">nginx:1.14.2</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="格式-1"><a href="#格式-1" class="headerlink" title="格式"></a>格式</h2><ul>
@@ -432,7 +583,7 @@
 </ul>
 </li>
 </ul>
-<h2 id="部署策略"><a href="#部署策略" class="headerlink" title="部署策略"></a>部署策略</h2><p>见<a href="/2022/02/blog/kubernetes/declarative_deployment/">后面文章</a></p>
+<h2 id="部署策略"><a href="#部署策略" class="headerlink" title="部署策略"></a>部署策略</h2><p>见<a href="/2022/02/blog/kubernetes/declarative_deployment/">声明式部署</a></p>
 
       
     </div>
