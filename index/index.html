@@ -318,7 +318,7 @@
 </ul>
 </li>
 </ol>
-<h1 id="CronJob"><a href="#CronJob" class="headerlink" title="CronJob"></a>CronJob</h1><p>CronJob 用于执行周期性的动作，例如备份、报告生成等。</p>
+<h1 id="CronJob"><a href="#CronJob" class="headerlink" title="CronJob"></a>CronJob</h1><p>CronJob 用于执行周期性的动作，例如备份、报告生成等。对Job的封装</p>
 <h2 id="Demo-2"><a href="#Demo-2" class="headerlink" title="Demo"></a>Demo</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronJob</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">schedule:</span> <span class="string">&quot;*/1 * * * *&quot;</span></span><br><span class="line">  <span class="attr">jobTemplate:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">template:</span></span><br><span class="line">        <span class="attr">spec:</span></span><br><span class="line">          <span class="attr">containers:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line">            <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">            <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">            <span class="attr">command:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">date;</span> <span class="string">echo</span> <span class="string">Hello</span> <span class="string">from</span> <span class="string">the</span> <span class="string">Kubernetes</span> <span class="string">cluster</span></span><br><span class="line">          <span class="attr">restartPolicy:</span> <span class="string">OnFailure</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="格式-2"><a href="#格式-2" class="headerlink" title="格式"></a>格式</h2><ul>
@@ -328,7 +328,7 @@
 <li>spec: 描述信息。<ul>
 <li>schedule: 什么时候被调度，时间表语法详见<a target="_blank" rel="noopener" href="https://crontab.guru/">cronitor</a>。</li>
 <li>jobTemplate: 被调度的Job的模板，但是没有apiVersion和kind，这里不再叙述。</li>
-<li>concurrencyPolicy: 并发性规则，值必须是以下几个之一: “Allow”（默认值）表示允许并发，”Forbid”表示禁止并发，”Replace”表示取消当前<strong>Job</strong>并移除它，然后用一个新的<strong>Job</strong>替换掉它。</li>
+<li>concurrencyPolicy: 并行性规则，值必须是以下几个之一: “Allow”（默认值）表示允许并行执行，”Forbid”表示禁止并行执行，”Replace”表示取消当前<strong>Job</strong>并移除它，然后用一个新的<strong>Job</strong>替换掉它。</li>
 <li>suspend: 挂起，如果为true，会告诉从controller暂停后续执行，但不会应用到已经开始的执行，主要用于暂停对<strong>CronJob</strong>的使用，这个值默认为假。</li>
 <li>startingDeadlineSeconds: 以秒为单位的截止时间，超时的执行会被认为<strong>Job</strong>失败。</li>
 </ul>
@@ -923,10 +923,10 @@
 <p>子网掩码根据自己定义的局域网的前缀写，一般是255.255.255.0。</p>
 <p>默认网关这里可以不用填。</p>
 <p>然后点击确定，保存配置。</p>
-<p>我自己的配置，不需要和我一样<br><img src="/2022/01/blog/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
+<p>我自己的配置，不需要和我一样<br><img src="/ip_config.png" alt="eustrain的IP配置"></p>
 <p>回到VMware的编辑&gt;虚拟网络编辑器，点击更改设置以获取管理员权限。</p>
 <p>如果配置的网卡是NAT模式，那么选中要配置的网卡，然后点击NAT设置，修改网关(ip)为该子网下的一个IP，然后点击确定。注意网关IP不要和宿主机IP相同，其主机地址也不可以所有位全部是0或1。</p>
-<p>我自己的网关配置<br><img src="/2022/01/blog/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
+<p>我自己的网关配置<br><img src="/gateway_config.png" alt="eustrain的网关配置"></p>
 <p>到此宿主机上的配置就全部完成了。</p>
 <p>虚拟机中一般选择DHCP自动获取IP地址就可以了，如果需要固定的IP地址，那么就自己填写IP地址(和网关，仅NAT模式填写，且和虚拟网络编辑器中的网关一致)，注意IP地址不能和宿主机IP地址(以及网关)相同。</p>
 <h1 id="虚拟机连接主机代理"><a href="#虚拟机连接主机代理" class="headerlink" title="虚拟机连接主机代理"></a>虚拟机连接主机代理</h1><p>在操作系统的设置或需自定义代理服务器的应用中将代理服务器填写为”宿主机IP:宿主机代理应用监听的端口”即可。注意代理应用需要允许来自局域网内的连接。</p>

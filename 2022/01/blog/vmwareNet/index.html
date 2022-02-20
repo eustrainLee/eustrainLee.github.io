@@ -25,8 +25,8 @@
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-8AB8E6E2-E16F-4E60-8421-669C96E6BF38-high.png">
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-B8B0D851-3DF2-4999-AE86-9059AE017A9C-high.png">
 <meta property="og:image" content="https://docs.vmware.com/cn/VMware-Workstation-Pro/16.0/com.vmware.ws.using.doc/images/GUID-4C1FE8E1-9C52-4A43-9C36-97AEC38C737B-high.png">
-<meta property="og:image" content="http://eustrainlee.github.io/2022/01/blog/vmwareNet/ip_config.png">
-<meta property="og:image" content="http://eustrainlee.github.io/2022/01/blog/vmwareNet/gateway_config.png">
+<meta property="og:image" content="http://eustrainlee.github.io/ip_config.png">
+<meta property="og:image" content="http://eustrainlee.github.io/gateway_config.png">
 <meta property="article:published_time" content="2022-01-19T03:38:56.000Z">
 <meta property="article:modified_time" content="2022-01-19T08:11:22.652Z">
 <meta property="article:author" content="eustrain">
@@ -290,10 +290,10 @@
 <p>子网掩码根据自己定义的局域网的前缀写，一般是255.255.255.0。</p>
 <p>默认网关这里可以不用填。</p>
 <p>然后点击确定，保存配置。</p>
-<p>我自己的配置，不需要和我一样<br><img src="/2022/01/blog/vmwareNet/ip_config.png" alt="eustrain的IP配置"></p>
+<p>我自己的配置，不需要和我一样<br><img src="/ip_config.png" alt="eustrain的IP配置"></p>
 <p>回到VMware的编辑&gt;虚拟网络编辑器，点击更改设置以获取管理员权限。</p>
 <p>如果配置的网卡是NAT模式，那么选中要配置的网卡，然后点击NAT设置，修改网关(ip)为该子网下的一个IP，然后点击确定。注意网关IP不要和宿主机IP相同，其主机地址也不可以所有位全部是0或1。</p>
-<p>我自己的网关配置<br><img src="/2022/01/blog/vmwareNet/gateway_config.png" alt="eustrain的网关配置"></p>
+<p>我自己的网关配置<br><img src="/gateway_config.png" alt="eustrain的网关配置"></p>
 <p>到此宿主机上的配置就全部完成了。</p>
 <p>虚拟机中一般选择DHCP自动获取IP地址就可以了，如果需要固定的IP地址，那么就自己填写IP地址(和网关，仅NAT模式填写，且和虚拟网络编辑器中的网关一致)，注意IP地址不能和宿主机IP地址(以及网关)相同。</p>
 <h1 id="虚拟机连接主机代理"><a href="#虚拟机连接主机代理" class="headerlink" title="虚拟机连接主机代理"></a>虚拟机连接主机代理</h1><p>在操作系统的设置或需自定义代理服务器的应用中将代理服务器填写为”宿主机IP:宿主机代理应用监听的端口”即可。注意代理应用需要允许来自局域网内的连接。</p>
