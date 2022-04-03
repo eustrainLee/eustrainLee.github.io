@@ -221,6 +221,124 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-blog/whatIsThisInCpp" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/04/blog/whatIsThisInCpp/" class="article-date">
+      <time datetime="2022-04-03T08:33:08.000Z" itemprop="datePublished">2022-04-03</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/04/blog/whatIsThisInCpp/">在C++中this是什么</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <blockquote>
+<p>本文部分代码仅作为示例，并不能通过编译。</p>
+</blockquote>
+<h1 id="this是什么？"><a href="#this是什么？" class="headerlink" title="this是什么？"></a>this是什么？</h1><p>在C++中，假设有一个<code>class</code> <code>N</code>，<code>N</code>的定义如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">N</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">N</span>(<span class="keyword">int</span> num) : <span class="built_in">num</span>(num) &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> num;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">increase</span><span class="params">(<span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>-&gt;num + num;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> num;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>假设<code>n</code>是<code>N</code>类型的一个变量</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">N <span class="title">n</span><span class="params">(<span class="number">1</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>当我们有调用成员函数increase的时候，会发生什么呢？</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">n.<span class="built_in">increase</span>(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+
+<p>此时会发生重载决议，寻找一个函数<code>increase(N, int)</code>，注意这里多出了一个隐藏的<code>N</code>类型的参数，它代表了调用这个成员函数的对象。所以说在成员函数<code>increase</code>中存在一个<code>N</code>类型的形参，我们可以通过这个形参找到这个对象，不过此时这个形参的类型是<code>N</code>，可<code>N</code>类型作为形参会被认为是一个新的对象（因为C++通过拷贝传递参数）。看上去编译器做了一件事，即创建了一个<code>N*</code>类型的变量叫做<code>this</code>。就像下面这样。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">increase</span><span class="params">(N n, <span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">auto</span>* <span class="keyword">this</span> = &amp;n;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>-&gt;num + num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这里</p>
+<h1 id="this的一些性质"><a href="#this的一些性质" class="headerlink" title="this的一些性质"></a>this的一些性质</h1><ul>
+<li><code>this</code>永远指向当前对象，无论该对象是否为另一对象的子对象。</li>
+<li><code>this</code>是一个<code>N*</code>类型的纯右值表达式，我们并不能假设<code>this</code>是一个变量</li>
+<li><code>this</code>可以有任意的cv限定符，也可以有引用修饰符，与重载决议时的添加的隐式对象形参拥有的相同。</li>
+<li>在模板中，<code>this</code>可以让名字在实例化的时候进行绑定</li>
+</ul>
+<h1 id="this的修饰（限定）符"><a href="#this的修饰（限定）符" class="headerlink" title="this的修饰（限定）符"></a>this的修饰（限定）符</h1><p>因为<code>this</code>会拥有与其隐式对象形参相同的cv限定符和引用修饰符，这里先讨论这个隐式形参对象。</p>
+<h2 id="cv限定符"><a href="#cv限定符" class="headerlink" title="cv限定符"></a>cv限定符</h2><p>成员函数上的cv修饰符要求调用该成员函数的对象拥有不少于它的限定符，即对象可以向该隐式对象形参进行隐式转换。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">T</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">c_foo</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    T t1;</span><br><span class="line">    t1.<span class="built_in">c_foo</span>(); <span class="comment">// error</span></span><br><span class="line">    t1.<span class="built_in">foo</span>(); <span class="comment">// OK</span></span><br><span class="line">    <span class="keyword">const</span> T t2;</span><br><span class="line">    t2.<span class="built_in">c_foo</span>(); <span class="comment">// OK</span></span><br><span class="line">    t2.<span class="built_in">foo</span>(); <span class="comment">// OK</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="引用修饰符"><a href="#引用修饰符" class="headerlink" title="引用修饰符"></a>引用修饰符</h2><p>成员函数上的引用修饰符可以要求对象表达式的值类别是左值（通过无仅拥有const限定符的左值引用）或右值（通过任意&amp;&amp;）。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">T</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> &amp; </span>&#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;foo &amp;&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// don&#x27;t insert no &amp; version and has &amp; version in same class</span></span><br><span class="line">    <span class="comment">// void foo() &#123;</span></span><br><span class="line">    <span class="comment">//     cout &lt;&lt; &quot;foo&quot; &lt;&lt; endl;</span></span><br><span class="line">    <span class="comment">// &#125;</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> &amp;&amp; </span>&#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;foo &amp;&amp;&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> <span class="keyword">const</span> &amp; </span>&#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;foo const &amp;&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    T t;</span><br><span class="line">    t.<span class="built_in">foo</span>(); <span class="comment">// foo &amp;</span></span><br><span class="line">    <span class="built_in">T</span>().<span class="built_in">foo</span>(); <span class="comment">// foo &amp;&amp;</span></span><br><span class="line">    <span class="keyword">const</span> T <span class="keyword">c_t</span>;</span><br><span class="line">    <span class="keyword">c_t</span>.<span class="built_in">foo</span>(); <span class="comment">// foo const &amp;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于引用可以可见过往的博客<a href="https://eustrainlee.github.io/2022/01/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a></p>
+<p>若仅考虑引用修饰符，这里会有三种写法</p>
+<ul>
+<li>没有任何引用修饰符 匹配左值和右值</li>
+<li>拥有&amp;(左值引用)修饰符 仅匹配左值</li>
+<li>拥有&amp;&amp;(右值引用)修饰符 仅匹配右值</li>
+</ul>
+<p>其中没有引用修饰符的版本与任一拥有引用修饰符的版本互斥，因此要么都写引用修饰符，要么都不写引用修饰符。</p>
+<p>关于其中的隐藏对象参数的类型</p>
+<ul>
+<li>对于拥有&amp;修饰符的版本，隐藏对象参数用过&amp;(左值引用)的方式传递</li>
+<li>对于拥有&amp;&amp;修饰符的版本，隐藏对象参数用过&amp;&amp;(右值引用)的方式传递</li>
+<li>对于没有任何引用修饰符的版本，隐藏对象参数通过既非左值引用亦非右值引用的另一种引用传递。在函数内的行为上和拥有&amp;的版本相同</li>
+</ul>
+<h1 id="Deducing-this"><a href="#Deducing-this" class="headerlink" title="Deducing this"></a>Deducing this</h1><p>当成员函数需要根据调用成员函数的对象表达式的值类别的不同去接收不同版本的参数时，往往会重复编写同样地函数。在Effective C++的条款3中提供了非常经典的例子。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TextBlock</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">char</span> <span class="keyword">const</span>&amp; <span class="keyword">operator</span>[](<span class="keyword">size_t</span> position) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> text[position];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">char</span>&amp; <span class="keyword">operator</span>[](<span class="keyword">size_t</span> position) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">const_cast</span>&lt;<span class="keyword">char</span>&amp;&gt;(</span><br><span class="line">      <span class="keyword">const_cast</span>&lt;TextBlock <span class="keyword">const</span>&amp;&gt;(*<span class="keyword">this</span>)[position]</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在有了deducing this之后，我们可以通过使用显式this注释参数的方式实现。</p>
+<p>先看这个解决方案</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TextBlock</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Self&gt;</span><br><span class="line">  <span class="keyword">like_t</span>&lt;Self, <span class="keyword">char</span>&gt;&amp; <span class="keyword">operator</span>[](<span class="keyword">this</span> Self&amp;&amp; self, <span class="keyword">size_t</span> position) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> self.text[position];</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>首先，<code>this</code>注释会出现在非静态成员函数的第一个形参前，当this注释出现时，<code>this</code>指针将不可用，函数编写者应该通过第一个参数访问这个调用函数的对象，相当于编译器不再生成<code>this</code>指针，就像这个成员函数的最后一条语句通过self而不是this来访问对象。特别地，如果函数的第一个参数没有任何的引用修饰符，那么将会按值传递，这是以往从未出现过的。</p>
+<p>this注释允许我们通过模板的形式自动生成对象参数的类型，而不是必须在函数末尾直接确定。</p>
+<p>而如何确定返回<code>char&amp;</code>还是<code>char const&amp;</code>的关键在于新的模板<code>like_t</code>，<code>like_t</code>接收两个类型参数，并将第一个参数的cv限定符和引用修饰符加在第二个参数上。这里我们通过<code>like_t&lt;Self, char&gt;</code>得到<code>Self</code>的cv限定符与引用修饰符，并加在char之上。然后在其后面加上<code>&amp;</code>进行引用折叠得到左值引用。</p>
+<p>自此我们不再需要重复很多次相同的函数或者写很多的<code>const_cast</code>/<code>static_cast</code>。</p>
+<p>关于deducing this的更多内容，见将来的博客。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li></ul>
+    </div>
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-blog/kubernetes/other_workload" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
