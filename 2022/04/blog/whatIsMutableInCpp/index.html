@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no" />
+<meta name="author" content="eustrain" />
+
+
+
+<meta name="description" content="一般类中的mutable假如一个类的某个成员函数被是const修饰，那么这个类的隐藏对象参数将会被添加const限定符（见在C++中this是什么），此时我们将无法修改任何成员，除非通过const_cast。 加入我们需要在这类函数被调用时修改某个成员变量（可能是用于统计），将会十分困难。 此时可以在需要被修改的成员变量前添加mutable限定符使其可以被修改，但是这个成员变量不可以是引用类型，不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在C++中mutable是什么">
+<meta property="og:url" content="http://eustrainlee.github.io/2022/04/blog/whatIsMutableInCpp/index.html">
+<meta property="og:site_name" content="eustrain的小站">
+<meta property="og:description" content="一般类中的mutable假如一个类的某个成员函数被是const修饰，那么这个类的隐藏对象参数将会被添加const限定符（见在C++中this是什么），此时我们将无法修改任何成员，除非通过const_cast。 加入我们需要在这类函数被调用时修改某个成员变量（可能是用于统计），将会十分困难。 此时可以在需要被修改的成员变量前添加mutable限定符使其可以被修改，但是这个成员变量不可以是引用类型，不">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-04T08:03:41.000Z">
+<meta property="article:modified_time" content="2022-04-04T08:24:26.785Z">
+<meta property="article:author" content="eustrain">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+
+<link rel="apple-touch-icon" href= "/apple-touch-icon.png">
+
+
+    <link rel="alternate" href="/atom.xml" title="eustrain的小站" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//cdn.bootcss.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+
+<link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>在C++中mutable是什么 | eustrain的小站</title>
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: true
+    }
+</script>
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//cdn.bootcss.com/jqueryui/1.10.4/jquery-ui.min.js", "//cdn.bootcss.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.jpg" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/"></a></h1>
+        </hgroup>
+
+        
+
+        
+            <form id="search-form">
+            <input type="text" id="local-search-input" name="q" placeholder="search..." class="search form-control" autocomplete="off" autocorrect="off" searchonload="false" />
+            <i class="fa fa-times" onclick="resetSearch()"></i>
+            </form>
+            <div id="local-search-result"></div>
+            <p class='no-result'>No results found <i class='fa fa-spinner fa-pulse'></i></p>
+        
+
+
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" rel="noopener" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" rel="noopener" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" rel="noopener" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                
+                
+
+                
+                
+                <section class="switch-part switch-part3">
+                
+                    <div id="js-aboutme">eustrain</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页"></a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.jpg" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页"></a></h1>
+            </hgroup>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:eustrain@outlook.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="https://github.com/eustrainlee" title="GitHub"></a>
+                            
+                                <a class="fa SegmentFault" target="_blank" href="https://segmentfault.com/u/eustrain" title="SegmentFault"></a>
+                            
+                                <a class="fa bilibili" target="_blank" href="https://space.bilibili.com/86867479" title="bilibili"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
+</nav>
+      <div class="body-wrap"><article id="post-blog/whatIsMutableInCpp" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/04/blog/whatIsMutableInCpp/" class="article-date">
+      <time datetime="2022-04-04T08:03:41.000Z" itemprop="datePublished">2022-04-04</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      在C++中mutable是什么
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h1 id="一般类中的mutable"><a href="#一般类中的mutable" class="headerlink" title="一般类中的mutable"></a>一般类中的mutable</h1><p>假如一个类的某个成员函数被是<code>const</code>修饰，那么这个类的隐藏对象参数将会被添加<code>const</code>限定符（见<a href="https://eustrainlee.github.io/2022/04/blog/whatIsThisInCpp/">在C++中this是什么</a>），此时我们将无法修改任何成员，除非通过<code>const_cast</code>。</p>
+<p>加入我们需要在这类函数被调用时修改某个成员变量（可能是用于统计），将会十分困难。</p>
+<p>此时可以在需要被修改的成员变量前添加<code>mutable</code>限定符使其可以被修改，但是这个成员变量不可以是引用类型，不可以拥有顶层的<code>const</code>限定符，也不可以是静态成员。</p>
+<h1 id="lambda中的mutable"><a href="#lambda中的mutable" class="headerlink" title="lambda中的mutable"></a>lambda中的mutable</h1><p>在lambda中，被捕获的变量无法修改，如果在lambda的小括号后面添加<code>mutable</code>，那么这些变量将可以被修改。</p>
+<p>不应该假设被捕获变量的类型的限定符，御三家对被捕获的变量的类型有着不同的看法，看下面的例子</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">M</span> &#123;</span></span><br><span class="line">    <span class="keyword">mutable</span> <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> std::is_same_v&lt;<span class="keyword">decltype</span>(i), <span class="keyword">const</span> <span class="keyword">int</span>&gt;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">T</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> std::is_same_v&lt;<span class="keyword">decltype</span>(i), <span class="keyword">const</span> <span class="keyword">int</span>&gt;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> &#123;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> std::is_same_v&lt;<span class="keyword">decltype</span>(i), <span class="keyword">const</span> <span class="keyword">int</span>&gt;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// gcc 11.2</span></span><br><span class="line">    <span class="comment">// clang 14.0.0</span></span><br><span class="line">    <span class="comment">// msvc v19.31</span></span><br><span class="line">    <span class="keyword">auto</span> check_const = [i = <span class="number">0</span>] () &#123; <span class="keyword">return</span> std::is_same_v&lt;<span class="keyword">decltype</span>(i), <span class="keyword">const</span> <span class="keyword">int</span>&gt;; &#125;;</span><br><span class="line">    <span class="keyword">auto</span> check_mutable = [i = <span class="number">0</span>] () <span class="keyword">mutable</span> &#123; <span class="keyword">return</span> std::is_same_v&lt;<span class="keyword">decltype</span>(i), <span class="keyword">const</span> <span class="keyword">int</span>&gt;; &#125;;</span><br><span class="line">    cout &lt;&lt; <span class="built_in">check_const</span>(); <span class="comment">// 1 0 0</span></span><br><span class="line">    cout &lt;&lt; <span class="built_in">check_mutable</span>(); <span class="comment">// 0 0 0</span></span><br><span class="line">    cout &lt;&lt; <span class="built_in">M</span>()(); <span class="comment">// 0 0 0</span></span><br><span class="line">    cout &lt;&lt; <span class="built_in">T</span>()(); <span class="comment">// 0 0 0</span></span><br><span class="line">    cout &lt;&lt; <span class="built_in">C</span>()(); <span class="comment">// 1 1 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以有如下的推测。</p>
+<p>gcc在被捕获的变量上添加<code>const</code>，在添加<code>mutable</code>后移除；</p>
+<p>而clang和msvc则在成员函数的隐藏对象形参上添加<code>const</code>，在添加<code>mutable</code>后在所有的成员上添加<code>mutable</code>或移除隐藏对象形参上的<code>const</code>。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2022/04/blog/whatIsThisInCpp/">
+                    在C++中this是什么
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+        <strong class="toc-title">文章目录</strong>
+        
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E8%88%AC%E7%B1%BB%E4%B8%AD%E7%9A%84mutable"><span class="toc-number">1.</span> <span class="toc-text">一般类中的mutable</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#lambda%E4%B8%AD%E7%9A%84mutable"><span class="toc-number">2.</span> <span class="toc-text">lambda中的mutable</span></a></li></ol>
+        
+    </div>
+    <style>
+        .left-col .switch-btn,
+        .left-col .switch-area {
+            display: none;
+        }
+        .toc-level-4 i,
+        .toc-level-4 ol {
+            display: none !important;
+        }
+    </style>
+
+    <input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
+
+    <script>
+        yiliaConfig.toc = ["隐藏目录", "显示目录", !!"true"];
+    </script>
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2022/04/blog/whatIsThisInCpp/" title="下一篇: 在C++中this是什么">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2022/04/blog/whatIsMutableInCpp/">在C++中mutable是什么</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/04/blog/whatIsThisInCpp/">在C++中this是什么</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/other_workload/">其他工作负载</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/declarative_deployment/">声明式部署</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/Workload/">工作负载</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/02/blog/kubernetes/manifest_and_pod/">资源清单与Pod</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/whatIsRefenenceInCpp/">在C++中引用是什么？</a></li><li class="post-list-item"><a class="post-list-link" href="/2022/01/blog/vmwareNet/">VMware虚拟机的网卡和代理服务器配置</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2022 eustrain
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" title="本站到访数"><i class="fa fa-user" aria-hidden="true"></i><span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>| </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit"  title="本页阅读量"><i class="fa fa-eye animated infinite pulse" aria-hidden="true"></i><span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script>
+    // Open in New Window
+    
+        var oOpenInNew = {
+            
+            
+            
+            
+            
+            
+             archives: ".archive-article-title", 
+             miniArchives: "a.post-list-link", 
+            
+            
+             socail: ".social a" 
+        }
+        for (var x in oOpenInNew) {
+            $(oOpenInNew[x]).attr("target", "_blank");
+        }
+    
+</script>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
