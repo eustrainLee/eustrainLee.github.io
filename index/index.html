@@ -221,6 +221,125 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-blog/whatIsLinkageInCpp" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2022/05/blog/whatIsLinkageInCpp/" class="article-date">
+      <time datetime="2022-05-21T08:42:05.000Z" itemprop="datePublished">2022-05-21</time>
+</a>
+
+
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/05/blog/whatIsLinkageInCpp/">在C++中链接是什么</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>在C++中链接是什么？</p>
+<p>C++的链接和链接器的链接有所不同。</p>
+<p>在讲C++中链接是什么之前先了解一下标签、实体与名字</p>
+<h1 id="标签、实体与名字"><a href="#标签、实体与名字" class="headerlink" title="标签、实体与名字"></a>标签、实体与名字</h1><h2 id="名字"><a href="#名字" class="headerlink" title="名字"></a>名字</h2><p>一个名字是一个标识符、运算符函数标识、转换函数标识或模板标识的符号。</p>
+<h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><p>标记语句中的标签由goto语句和标签表达式引入。如下所示。</p>
+<blockquote>
+<p>标记语句中的标签只能作为goto的目标。</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A: <span class="comment">// 引入标签A</span></span><br><span class="line"><span class="keyword">goto</span> B; <span class="comment">// 引入标签B</span></span><br></pre></td></tr></table></figure>
+
+<p>switch语句中的case标签和default标签，它们仅能出现在switch语句中。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in"><span class="keyword">switch</span></span>(N) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="number">1</span>: <span class="comment">// Case标签也是一个标签</span></span><br><span class="line">        <span class="comment">// Do something</span></span><br><span class="line">    <span class="keyword">default</span>: <span class="comment">// default标签</span></span><br><span class="line">        <span class="comment">// Do other something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>标记语句中会引入一个标签，同时还有代表这个标签的名字，要不然怎么goto到这个标签呢？不过switch中的case标签和default标签并没有名字。</p>
+<h2 id="实体"><a href="#实体" class="headerlink" title="实体"></a>实体</h2><p>一个实体是一个值、对象、引用、结构化绑定、函数、枚举器、类型、类成员、位域、模板、模板特化、名字空间或包。</p>
+<blockquote>
+<p>浅谈一下值和对象还有变量</p>
+<h2 id="值"><a href="#值" class="headerlink" title="值"></a>值</h2><p>值本质是一段由01构成的序列，可以存储一些信息。</p>
+<p>在C++中，值仅在表达式中出现。例如，这个语句</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> n = <span class="number">1</span> + <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+
+<p>在这里内置的加号<code>+</code>接收两个值，分别为<code>1</code>和<code>2</code>，然后在运算之后得到表达式<code>1+2</code>的值<code>3</code></p>
+<p>然后赋值运算符<code>=</code>，将<code>3</code>这个值赋值给<code>n</code>。</p>
+<h1 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h1><p>对象拥有名字、存储期、生存期、类型</p>
+<p>对象拥有它的值</p>
+<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>变量由声明引入，变量的名字表示一个引用或对象</p>
+</blockquote>
+<p>实体由声明语句引入，由被算作定义的声明语句所定义。</p>
+<h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>不考虑标签，只考虑名字与实体的关系。</p>
+<p>一个名字按理说只在当前scope中有效。不过，</p>
+<p>当一个名称可以表示与另一个scope内的声明引入的名称相同的对象、引用、函数、类型、模板、命名空间或值（绝大部分实体）时，就称其具有链接。</p>
+<blockquote>
+<p>可以简单的认为scope就是一对花括号或者一个翻译单元</p>
+</blockquote>
+<p><strong>外部链接</strong></p>
+<p>名字可以跨翻译单元找到那个实体</p>
+<p><strong>模块链接</strong></p>
+<p>可以跨模块找到那个实体</p>
+<p><strong>内部链接</strong></p>
+<p>可以在当前翻译单元找到那个实体</p>
+<p><strong>无链接</strong></p>
+<p>仅在当前scope内找到那个实体</p>
+<p>总的来说，有链接就是可以跨scope使用名字，没有则不行。</p>
+<p><strong>值得注意的一些问题 :</strong></p>
+<p>没有extern修饰的全局变量拥有内部链接，而函数拥有外部链接</p>
+<p>无论是否有链接，都可以在子scope中被找到</p>
+<p>要注意大多数时候名字需要被提前声明或定义。</p>
+<p>有的实体在多个scope中被多次定义，可是有时却指向相同实体，例如类、有<code>inline</code>修饰符的全局变量或静态成员变量等。</p>
+<h1 id="语言链接"><a href="#语言链接" class="headerlink" title="语言链接"></a>语言链接</h1><p>有的时候，我们需要跨语言使用一个函数，这时候就需要语言链接</p>
+<blockquote>
+<p>注意语言链接仅会作用于函数</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> string-literal declaration</span><br><span class="line"><span class="keyword">extern</span> string-literal &#123; declaration-<span class="built_in">seq</span>(opt) &#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C++&quot;</span> <span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>;</span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">double</span> <span class="title">sqrt</span><span class="params">(<span class="keyword">double</span>)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>C++标准只定义了<code>&quot;C&quot;</code>和<code>&quot;C++&quot;</code>的语言链接，其余的语言链接由实现定义。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li></ul>
+    </div>
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-blog/whatIsMutableInCpp" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
